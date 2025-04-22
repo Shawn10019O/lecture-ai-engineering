@@ -42,7 +42,14 @@ def generate_response(pipe, user_question):
             {"role": "user", "content": user_question},
         ]
         # max_new_tokensを調整可能にする（例）
-        outputs = pipe(messages, max_new_tokens=512, do_sample=True, temperature=0.7, top_p=0.9)
+        prompt = f"以下の質問に丁寧に答えてください。\n質問: {user_question}\n回答:"
+        outputs = pipe(
+              prompt,
+              max_new_tokens=512,        # ← ここで「生成トークン数の上限」を指定
+              do_sample=True,
+              temperature=0.7,
+              top_p=0.9,
+          )
 
         # Gemmaの出力形式に合わせて調整が必要な場合がある
         # 最後のassistantのメッセージを取得
