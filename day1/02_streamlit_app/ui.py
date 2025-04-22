@@ -81,7 +81,7 @@ def display_feedback_form():
                 combined_feedback,
                 correct_answer,
                 is_correct,
-                st.session_state.response_time
+                st.session_state.response_time,
             )
             st.session_state.feedback_given = True
             st.success("フィードバックが保存されました！")
@@ -162,11 +162,15 @@ def display_history_list(history_df):
             cols[1].metric("応答時間(秒)", f"{row['response_time']:.2f}")
             cols[2].metric("単語数", f"{row['word_count']}")
 
-            cols = st.columns(3)
+            cols = st.columns(6)
             # NaNの場合はハイフン表示
             cols[0].metric("BLEU", f"{row['bleu_score']:.4f}" if pd.notna(row['bleu_score']) else "-")
             cols[1].metric("類似度", f"{row['similarity_score']:.4f}" if pd.notna(row['similarity_score']) else "-")
             cols[2].metric("関連性", f"{row['relevance_score']:.4f}" if pd.notna(row['relevance_score']) else "-")
+            cols[3].metric("BERT P", f"{row['bert_precision']:.4f}" if pd.notna(row.get('bert_precision')) else "-")
+            cols[4].metric("BERT R",f"{row['bert_recall']:.4f}" if pd.notna(row.get('bert_recall')) else "-")
+            cols[5].metric("BERT F1",f"{row['bert_f1']:.4f}" if pd.notna(row.get('bert_f1')) else "-")
+
 
     st.caption(f"{total_items} 件中 {start_idx+1} - {min(end_idx, total_items)} 件を表示")
 
@@ -222,7 +226,7 @@ def display_metrics_analysis(history_df):
 
     # 全体の評価指標の統計
     st.write("##### 評価指標の統計")
-    stats_cols = ['response_time', 'bleu_score', 'similarity_score', 'word_count', 'relevance_score']
+    stats_cols = ['response_time', 'bleu_score', 'similarity_score', 'word_count','bert_precision','bert_recall','bert_f1']
     valid_stats_cols = [c for c in stats_cols if c in analysis_df.columns and analysis_df[c].notna().any()]
     if valid_stats_cols:
         metrics_stats = analysis_df[valid_stats_cols].describe()
