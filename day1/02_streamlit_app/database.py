@@ -21,7 +21,10 @@ CREATE TABLE IF NOT EXISTS {TABLE_NAME}
  bleu_score REAL,
  similarity_score REAL,
  word_count INTEGER,
- relevance_score REAL)
+ relevance_score REAL,
+ bert_precision REAL,
+ bert_recall REAL,
+ bert_f1 REAL)
 '''
 
 # --- データベース初期化 ---
@@ -39,7 +42,7 @@ def init_db():
         raise e # エラーを再発生させてアプリの起動を止めるか、適切に処理する
 
 # --- データ操作関数 ---
-def save_to_db(question, answer, feedback, correct_answer, is_correct, response_time):
+def save_to_db(question, answer, feedback, correct_answer, is_correct, response_time ):
     """チャット履歴と評価指標をデータベースに保存する"""
     conn = None
     try:
@@ -48,16 +51,16 @@ def save_to_db(question, answer, feedback, correct_answer, is_correct, response_
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # 追加の評価指標を計算
-        bleu_score, similarity_score, word_count, relevance_score = calculate_metrics(
+        bleu_score, similarity_score, word_count, relevance_score,bert_precision,bert_recall,bert_f1 = calculate_metrics(
             answer, correct_answer
         )
 
         c.execute(f'''
         INSERT INTO {TABLE_NAME} (timestamp, question, answer, feedback, correct_answer, is_correct,
-                                 response_time, bleu_score, similarity_score, word_count, relevance_score)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                 response_time, bleu_score, similarity_score, word_count, relevance_score,bert_precision,bert_recall,bert_f1 )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (timestamp, question, answer, feedback, correct_answer, is_correct,
-             response_time, bleu_score, similarity_score, word_count, relevance_score))
+             response_time, bleu_score, similarity_score, word_count, relevance_score,bert_precision,bert_recall,bert_f1 ))
         conn.commit()
         print("Data saved to DB successfully.") # デバッグ用
     except sqlite3.Error as e:
