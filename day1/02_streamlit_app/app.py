@@ -48,22 +48,23 @@ pipe = llm.load_model()
 # --- Streamlit アプリケーション ---
 st.title("🤖 Gemma 2 Chatbot with Feedback")
 st.write("Gemmaモデルを使用したチャットボットです。回答に対してフィードバックを行えます。")
-st.markdown("---")
+st.markdown("### 🔀 ページ選択")
 
-# --- サイドバー ---
-st.sidebar.title("ナビゲーション")
+
 # セッション状態を使用して選択ページを保持
 if 'page' not in st.session_state:
     st.session_state.page = "チャット" # デフォルトページ
 
-page = st.sidebar.radio(
-    "ページ選択",
+page = st.radio(
+    "",
     ["チャット", "履歴閲覧", "サンプルデータ管理"],
     key="page_selector",
     index=["チャット", "履歴閲覧", "サンプルデータ管理"].index(st.session_state.page), # 現在のページを選択状態にする
-    on_change=lambda: setattr(st.session_state, 'page', st.session_state.page_selector) # 選択変更時に状態を更新
+    on_change=lambda: setattr(st.session_state, 'page', st.session_state.page_selector), # 選択変更時に状態を更新
+    horizontal=True
 )
 
+st.markdown("---")
 
 # --- メインコンテンツ ---
 if st.session_state.page == "チャット":
@@ -76,6 +77,3 @@ elif st.session_state.page == "履歴閲覧":
 elif st.session_state.page == "サンプルデータ管理":
     ui.display_data_page()
 
-# --- フッターなど（任意） ---
-st.sidebar.markdown("---")
-st.sidebar.info("開発者: [Your Name]")
