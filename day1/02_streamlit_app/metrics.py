@@ -5,6 +5,7 @@ from janome.tokenizer import Tokenizer
 import re
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+from bert_score import score 
 
 # NLTKのヘルパー関数（エラー時フォールバック付き）
 try:
@@ -40,9 +41,12 @@ def calculate_metrics(answer, correct_answer):
     bleu_score = 0.0
     similarity_score = 0.0
     relevance_score = 0.0
+    bert_precision = 0.0
+    bert_recall = 0.0
+    bert_f1 = 0.0
 
     if not answer: # 回答がない場合は計算しない
-        return bleu_score, similarity_score, word_count, relevance_score
+        return bleu_score, similarity_score, word_count, relevance_score,bert_precision, bert_recall, bert_f1
 
     # 単語数のカウント
     tokenizer = Tokenizer()
@@ -92,8 +96,26 @@ def calculate_metrics(answer, correct_answer):
         except Exception as e:
             # st.warning(f"関連性スコア計算エラー: {e}")
             relevance_score = 0.0 # エラー時は0
+        
+        # bert score(追加評価指標)
+        try:
+            # 参照文と生成文をリスト形式で渡す
+            P, R, F1 = score(
+                [answer_lower],          # まずモデルの回答をリストで
+                [correct_answer_lower],  # 次に正解文をリストで
+                lang="ja",
+                verbose=False
+            )
+            bert_precision = P[0].item()
+            bert_recall    = R[0].item()
+            bert_f1        = F1[0].item()
 
-    return bleu_score, similarity_score, word_count, relevance_score
+        except Exception as e:
+            st.warning(f"BERTScore 計算エラー: {e}")
+            import traceback; traceback.print_exc()
+            bert_precision = bert_recall = bert_f1 = 0.0
+
+    return bleu_score, similarity_score, word_count, relevance_score,bert_precision,bert_recall,bert_f1
 
 def get_metrics_descriptions():
     """評価指標の説明を返す"""
@@ -104,5 +126,9 @@ def get_metrics_descriptions():
         "類似度スコア (similarity_score)": "TF-IDFベクトルのコサイン類似度による、正解と回答の意味的な類似性 (0〜1の値)",
         "単語数 (word_count)": "回答に含まれる単語の数。情報量や詳細さの指標",
         "関連性スコア (relevance_score)": "正解と回答の共通単語の割合。トピックの関連性を表す (0〜1の値)",
-        "効率性スコア (efficiency_score)": "正確性を応答時間で割った値。高速で正確な回答ほど高スコア"
-    }
+        "効率性スコア (efficiency_score)": "正確性を応答時間で割った値。高速で正確な回答ほど高スコア",
+        "BERT Precision": "BERTScore の Precision（文間類似度）",
+        "BERT Recall":    "BERTScore の Recall（文間類似度）",
+        "BERT F1":        "BERTScore の F1（文間類似度）",
+
+      }
