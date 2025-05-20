@@ -171,3 +171,21 @@ def test_model_reproducibility(sample_data, preprocessor):
     assert np.array_equal(
         predictions1, predictions2
     ), "モデルの予測結果に再現性がありません"
+
+
+def test_model_training_time(sample_data, preprocessor):
+    """モデルの学習にかかる時間を検証（10秒未満）"""
+    X = sample_data.drop("Survived", axis=1)
+    y = sample_data["Survived"].astype(int)
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
+    model = Pipeline(
+        [
+            ("preprocessor", preprocessor),
+            ("classifier", RandomForestClassifier(n_estimators=100, random_state=42)),
+        ]
+    )
+
+    start = time.time()
+    model.fit(X_train, y_train)
+    duration = time.time() - start
+    assert duration < 10.0, f"学習時間が長すぎます: {duration:.2f}秒"
